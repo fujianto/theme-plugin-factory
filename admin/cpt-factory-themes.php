@@ -155,7 +155,7 @@ if ( ! function_exists( 'tpf_register_tax_theme_feature' ) ) {
 			'show_tagcloud'              => true,
 		);
 
-		register_taxonomy( 'tpf-theme-feature', array( 'tpf-themes' ), $args );
+		register_taxonomy( 'tpf-theme-features', array( 'tpf-themes' ), $args );
 	}
 
 	add_action( 'init', 'tpf_register_tax_theme_feature', 0 );
