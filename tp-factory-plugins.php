@@ -27,7 +27,7 @@ define('FACTORY_DIR_URI' , $extension_url);
 function tpf_check_required_plugins(){
     /* Add built-in Carbonfields if carbon-fields plugin isn't active */
     if( !is_plugin_active('carbon-fields/carbon-fields-plugin.php')){
-        require_once FACTORY_DIR. '/admin/carbon-fields/carbon-fields-plugin.php';;
+        require_once FACTORY_DIR. '/admin/carbon-fields/carbon-fields-plugin.php';
     }
 }
 
@@ -37,7 +37,7 @@ add_action( 'admin_init', 'tpf_check_required_plugins' );
 require_once FACTORY_DIR. '/admin/cpt-factory-themes.php';
 
 /*-------------------------------------------------------------------------------
-	Custom Columns on All Themes page
+	Custom Columns on All Themes page Dashboard
 -------------------------------------------------------------------------------*/
 
 // GET FEATURED IMAGE
