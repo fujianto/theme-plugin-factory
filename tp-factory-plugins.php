@@ -1,15 +1,17 @@
 <?php
 /**
  * Plugin Name:       KodePixel Theme Factory
- * Plugin URI:        http://themevulkan.com/truffle-box/
+ * Plugin URI:        http://septianfujianto.com/plugin/theme-factory
  * Description:       Easily manage Themes collection for WordPress Developer.
- * Version:           0.1.1
+ * Version:           0.1.2
  * Author:            Septian Ahmad Fujianto
- * Author URI:        http://kodepixel.com/
+ * Author URI:        http://septianfujianto.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       tp-factory
  * Domain Path:       /languages
+ * GitHub plugin URI: https://github.com/fujianto/theme-plugin-factory
+ * GitHub branch: master
  */
 
 /* Exit if accessed directly */
