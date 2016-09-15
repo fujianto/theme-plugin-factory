@@ -182,8 +182,8 @@ Container::make('post_meta', __('Theme Detail', 'tp-factory'))
         	->help_text(__( 'URL to ZIP / theme files', 'tp-factory' )),
         Field::make('text', $prefix.'demo_url', __( 'Demo URL', 'tp-factory' ))
         	->help_text(__( 'URL to theme demo site', 'tp-factory' )),
-         Field::make('text', $prefix.'demo_mask_url', __( 'Demo Mask URL', 'tp-factory' ))
-        	->help_text(__( 'URL mask to theme demo site', 'tp-factory' )),	
+    	Field::make('text', $prefix.'demo_mask_url', __( 'Demo Mask URL', 'tp-factory' ))
+        	->help_text(__( 'Masked URL to theme demo site', 'tp-factory' )),
         Field::make('text', $prefix.'repo_url', __( 'Repository URL', 'tp-factory' ))
         	->help_text(__( 'URL to github or other repository', 'tp-factory' )),
         Field::make('text', $prefix.'purchase_url', __( 'Purchase URL', 'tp-factory' ))
