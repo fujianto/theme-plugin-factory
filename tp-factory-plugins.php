@@ -3,7 +3,7 @@
  * Plugin Name:       KodePixel Theme Factory
  * Plugin URI:        http://septianfujianto.com/plugin/theme-factory
  * Description:       Easily manage Themes collection for WordPress Developer.
- * Version:           0.1.2
+ * Version:           0.1.3
  * Author:            Septian Ahmad Fujianto
  * Author URI:        http://septianfujianto.com/
  * License:           GPL-2.0+

@@ -46,7 +46,7 @@ if ( ! function_exists('tpf_register_cpt_themes') ) {
 			'label'                 => __( 'Themes', 'tp-factory' ),
 			'description'           => __( 'Check out Our best WordPress Themes here.', 'tp-factory' ),
 			'labels'                => $labels,
-			'supports'              => array( 'title', 'editor', 'thumbnail', ),
+			'supports'              => array( 'title', 'editor', 'thumbnail', 'comments'),
 			'taxonomies'            => array( 'tpf-theme-types', 'tpf-theme-features'),
 			'hierarchical'          => false,
 			'public'                => true,
