@@ -21,7 +21,7 @@ class Comment_Meta_Container extends Container {
 		parent::__construct( $title );
 
 		if ( ! $this->get_datastore() ) {
-			$this->set_datastore( new Comment_Meta_Datastore() );
+			$this->set_datastore( new Comment_Meta_Datastore(), $this->has_default_datastore() );
 		}
 	}
 
@@ -93,7 +93,7 @@ class Comment_Meta_Container extends Container {
 	 **/
 	public function set_comment_id( $comment_id ) {
 		$this->comment_id = $comment_id;
-		$this->store->set_id( $comment_id );
+		$this->get_datastore()->set_id( $comment_id );
 	}
 
 	/**
@@ -112,36 +112,6 @@ class Comment_Meta_Container extends Container {
 		foreach ( $this->fields as $field ) {
 			$field->set_value_from_input();
 			$field->save();
-		}
-	}
-
-	/**
-	 * Perform checks whether there is a field registered with the name $name.
-	 * If not, the field name is recorded.
-	 *
-	 * @param string $name
-	 **/
-	public function verify_unique_field_name( $name ) {
-		if ( ! isset( self::$registered_field_names['comment'] ) ) {
-			self::$registered_field_names['comment'] = array();
-		}
-
-		if ( in_array( $name, self::$registered_field_names['comment'] ) ) {
-			throw new Incorrect_Syntax_Exception( 'Field name "' . $name . '" already registered' );
-		}
-
-		self::$registered_field_names['comment'][] = $name;
-	}
-
-	/**
-	 * Remove field name $name from the list of unique field names
-	 *
-	 * @param string $name
-	 **/
-	public function drop_unique_field_name( $name ) {
-		$index = array_search( $name, self::$registered_field_names['comment'] );
-		if ( $index !== false ) {
-			unset( self::$registered_field_names['comment'][ $index ] );
 		}
 	}
 }

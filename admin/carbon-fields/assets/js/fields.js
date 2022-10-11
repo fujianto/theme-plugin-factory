@@ -13,7 +13,7 @@ window.carbon = window.carbon || {};
 	| The app will fallback to this class if a field has no dedicated model.
 	|
 	| A model is responsible for holding the fields current state (data).
-	| It also has all the logic surrounding the data management, like: 
+	| It also has all the logic surrounding the data management, like:
 	|  - conversion
 	|  - validation
 	|  - access control
@@ -100,7 +100,7 @@ window.carbon = window.carbon || {};
 		 * Used to include additional variables that can be used inside the template
 		 * Can be extended on the "field:beforeRender" event.
 		 */
-		templateVariables: {}, 
+		templateVariables: {},
 
 		/*
 		 * Whether there was validation error at some point
@@ -183,7 +183,7 @@ window.carbon = window.carbon || {};
 			var lazyload = this.model.get('lazyload');
 			var template = carbon.template(type);
 
-			_.extend(this.templateVariables, this.model.attributes, {
+			this.templateVariables = _.extend({}, this.templateVariables, this.model.attributes, {
 				model: this.model
 			});
 
@@ -203,7 +203,7 @@ window.carbon = window.carbon || {};
 		},
 
 		/*
-		 * Syncs the user entered value with the model value. 
+		 * Syncs the user entered value with the model value.
 		 * By default this method is fired when the input value has changed.
 		 *
 		 * If the field has more then one input, this method should be overwritten!
@@ -215,9 +215,9 @@ window.carbon = window.carbon || {};
 			this.model.set('value', value);
 		},
 
-		/* 
-		 * If the field has had validation error (after form submission), 
-		 * re-validate it after each value change. 
+		/*
+		 * If the field has had validation error (after form submission),
+		 * re-validate it after each value change.
 		 */
 		revalidate: function() {
 			if (this.model.isRequired() && this.hadErrors) {
@@ -268,7 +268,7 @@ window.carbon = window.carbon || {};
 	|
 	| Holds a set of field models.
 	| Also includes model class initialization logic.
-	| 
+	|
 	*/
 	carbon.fields.Collection = Backbone.Collection.extend({
 		model: function(attrs, options) {
@@ -291,7 +291,7 @@ window.carbon = window.carbon || {};
 	| A model that handles the field conditional logic rules.
 	|
 	| It listens on the target fields collection and validates the rules
-	| every time the values are changed. 
+	| every time the values are changed.
 	|
 	| The "valid" model attribute is "true" if the rule conditions are met.
 	|
@@ -373,6 +373,14 @@ window.carbon = window.carbon || {};
 				case '<=' : return value1 <= value2;
 				case 'IN' : return _.some(value2, function(value) { return value == value1; });
 				case 'NOT IN' : return _.every(value2, function(value) { return value != value1; });
+				case 'INCLUDES': return _.every([].concat(value2), function(value) {
+					var val = (value1 === null) ? '' : value1;
+					return val.indexOf(value) !== -1;
+				} );
+				case 'EXCLUDES': return _.every([].concat(value2), function(value) {
+					var val = (value1 === null) ? '' : value1;
+					return val.indexOf(value) === -1;
+				} );
 			}
 		}
 	});
@@ -390,7 +398,7 @@ window.carbon = window.carbon || {};
 		events: {
 			'update:marker': 'updateMarker',
 			'keypress input.address': 'updateAddress',
-			'click .address-search-btn': 'updateAddress'
+			'click .carbon-map-search-button': 'updateAddress'
 		},
 
 		initialize: function() {
@@ -438,7 +446,7 @@ window.carbon = window.carbon || {};
 			google.maps.event.addListenerOnce(map, 'dragend', this.enableScrollZoom);
 
 			// on marker drag, set the new position in the model
-			google.maps.event.addListener(marker, "dragend", function (mEvent) { 
+			google.maps.event.addListener(marker, "dragend", function (mEvent) {
 				_this.model.set({
 					lat: marker.getPosition().lat(),
 					lng: marker.getPosition().lng()
@@ -611,7 +619,9 @@ window.carbon = window.carbon || {};
 					this.mediaButtonsInit();
 
 					// Initialize mceInit
-					tinymce.init(mceInit);
+					setTimeout(function() {
+						tinymce.init(mceInit);
+					}, 0);
 
 					// Initialize qtInit (quicktags)
 					var qtag = quicktags( qtInit );
@@ -659,7 +669,7 @@ window.carbon = window.carbon || {};
 						// trigger change on textarea
 						$field.find('textarea').trigger('change');
 					});
-					
+
 				};
 			}
 
@@ -744,17 +754,17 @@ window.carbon = window.carbon || {};
 				if (!ed) {
 					$.error('RichText Field - tinyMCE editor not found.');
 				}
-				
+
 				// save
 				ed.save();
-				
+
 				// destroy editor
 				ed.destroy();
 			} catch(e) {
 				console.log(e);
 			}
 		},
-		
+
 		enableEditor: function() {
 			if (!this.active) {
 				return false;
@@ -790,7 +800,6 @@ window.carbon = window.carbon || {};
 				dateFormat: 'yy-mm-dd',
 				changeMonth: true,
 				changeYear: true,
-				showButtonPanel: true,
 				hideIfNoPrevNext: true,
 				beforeShow: function(input, inst) {
 					$('#ui-datepicker-div').addClass('carbon-jquery-ui');
@@ -803,7 +812,7 @@ window.carbon = window.carbon || {};
 
 			$trigger.on('click', function(e) {
 				$field.focus();
-				
+
 				e.preventDefault();
 			});
 		}
@@ -817,9 +826,9 @@ window.carbon = window.carbon || {};
 	// Color VIEW
 	carbon.fields.View.Color = carbon.fields.View.extend({
 		events: _.extend({}, carbon.fields.View.prototype.events, {
-			'click .pickcolor.button': 'focusField',
-			'focus input.carbon-color': 'showColorPicker',
-			'blur input.carbon-color': 'hideColorPicker'
+			'click .pickcolor': 'focusField',
+			'focus input.carbon-color-field': 'showColorPicker',
+			'blur input.carbon-color-field': 'hideColorPicker'
 		}),
 
 		initialize: function() {
@@ -830,7 +839,7 @@ window.carbon = window.carbon || {};
 
 		initColorPicker: function() {
 			var _this = this;
-			var $field = this.$field = this.$('input.carbon-color');
+			var $field = this.$field = this.$('input.carbon-color-field');
 			var color = this.model.get('value');
 
 			_this.setColor(color);
@@ -863,8 +872,9 @@ window.carbon = window.carbon || {};
 
 			}
 
-			this.$('.button')
+			this.$('.carbon-color-preview')
 				.css('background-color', color)
+				.parent()
 				.toggleClass('has-color', !!color);
 		},
 
@@ -927,7 +937,19 @@ window.carbon = window.carbon || {};
 	 *------------------------------------------------------------------------*/
 
 	// Gravity Form MODEL
-	carbon.fields.Model.GravityForm = carbon.fields.Model.Select.extend();
+	carbon.fields.Model.GravityForm = carbon.fields.Model.Select.extend({
+		initialize: function () {
+			carbon.fields.Model.Select.prototype.initialize.apply(this);
+		},
+	});
+
+	// Gravity Form VIEW
+	carbon.fields.View.GravityForm = carbon.fields.View.extend({
+		initialize: function() {
+			carbon.fields.View.prototype.initialize.apply(this);
+			this.listenTo(this.model, 'change:value', this.render);
+		}
+	});
 
 	/*--------------------------------------------------------------------------
 	 * SIDEBAR
@@ -952,10 +974,10 @@ window.carbon = window.carbon || {};
 				var sidebarId   = model.get('id');
 				var sidebar = {
 					name: sidebarName,
-					value: sidebarName
+					value: sidebarId
 				};
 
-				// If this sidebar is excluded ( by name or by ID), do not add it to the options. 
+				// If this sidebar is excluded ( by name or by ID), do not add it to the options.
 				if ( typeof(excluded_sidebars) !== 'undefined' && ( excluded_sidebars.indexOf(sidebarName) > -1 || excluded_sidebars.indexOf(sidebarId) > -1 ) ) {
 					return;
 				}
@@ -1058,7 +1080,7 @@ window.carbon = window.carbon || {};
 
 			if (sidebarName) {
 				var $option = $('<option value="' + _.escape(sidebarName) + '">' + sidebarName + '</option>').insertBefore($select.find('option:last'));
-				
+
 				$select.find('option').prop('selected', false);
 				$option.prop('selected', true);
 			} else {
@@ -1087,7 +1109,7 @@ window.carbon = window.carbon || {};
 			this.on('field:beforeRender', this.loadDescriptionTemplate);
 
 			this.listenTo(this.model, 'change:value', this.updateInput);
-			this.listenTo(this.model, 'change:url', this.updateView);
+			this.listenTo(this.model, 'change:value', this.updateView);
 			this.listenTo(this.model, 'change:thumb_url', this.updateThumb);
 		},
 
@@ -1110,6 +1132,7 @@ window.carbon = window.carbon || {};
 			var windowLabel = this.model.get('window_label');
 			var typeFilter = this.model.get('type_filter');
 			var valueType = this.model.get('value_type');
+			var value = this.model.get('value');
 			var mediaTypes = {};
 
 			var getAttachmentThumb = function(attachment) {
@@ -1134,42 +1157,54 @@ window.carbon = window.carbon || {};
 			var mediaField = mediaTypes[type];
 
 			// Runs when an image is selected.
-			mediaField.on('select', function () {
-				// Grabs the attachment selection and creates a JSON representation of the model.
-				var mediaAttachments = mediaField.state().get('selection').toJSON();
+			mediaField
+				.on('select', function () {
+					// Grabs the attachment selection and creates a JSON representation of the model.
+					var mediaAttachments = mediaField.state().get('selection').toJSON();
 
-				// Get the first attachment and remove it from the array
-				var mediaAttachment = mediaAttachments.shift();
+					// Get the first attachment and remove it from the array
+					var mediaAttachment = mediaAttachments.shift();
 
-				// If multiple attachments, multiply the field
-				_.each(mediaAttachments, function(att) {
-					var thumbUrl = getAttachmentThumb(att);
-					if ( ! thumbUrl ) {
-						thumbUrl = _this.model.get('default_thumb_url')
-					}
-					_this.model.set('multiply', {
-						'value': att[valueType],
-						'file_type': att.type,
-						'url': att.url,
-						'thumb_url': thumbUrl
+					// If multiple attachments, multiply the field
+					_.each(mediaAttachments, function(att) {
+						var thumbUrl = getAttachmentThumb(att);
+						if ( ! thumbUrl ) {
+							thumbUrl = _this.model.get('default_thumb_url')
+						}
+						_this.model.set('multiply', {
+							'value': att[valueType],
+							'file_type': att.type,
+							'file_name': att.filename,
+							'thumb_url': thumbUrl
+						});
 					});
+
+					var mediaValue = mediaAttachment[valueType];
+					var thumbUrl = getAttachmentThumb(mediaAttachment);
+					if ( ! thumbUrl ) {
+						thumbUrl = _this.model.get('default_thumb_url');
+					}
+
+					// Update the model
+					this.model.set('file_type', mediaAttachment.type);
+					this.model.set('file_name', mediaAttachment.filename);
+					this.model.set('value', mediaValue);
+					this.model.set('thumb_url', thumbUrl);
+
+					// Trigger an event that notifies that a media file is selected
+					this.trigger('media:updated', mediaAttachment);
+				}, this)
+				.on('open', function() {
+					if ( ! value ) {
+						return;
+					};
+
+					var attachment = wp.media.attachment(value);
+					var selection = mediaField.state().get('selection');
+
+					attachment.fetch();
+					selection.set( attachment ? [ attachment ] : [] );
 				});
-
-				var mediaValue = mediaAttachment[valueType];
-				var thumbUrl = getAttachmentThumb(mediaAttachment);
-				if ( ! thumbUrl ) {
-					thumbUrl = _this.model.get('default_thumb_url');
-				}
-
-				// Update the model
-				this.model.set('file_type', mediaAttachment.type);
-				this.model.set('value', mediaValue);
-				this.model.set('url', mediaAttachment.url);
-				this.model.set('thumb_url', thumbUrl);
-
-				// Trigger an event that notifies that a media file is selected
-				this.trigger('media:updated', mediaAttachment);
-			}, this);
 
 			// Opens the media library frame
 			mediaField.open();
@@ -1189,11 +1224,11 @@ window.carbon = window.carbon || {};
 		},
 
 		updateView: function(model) {
-			var url = model.get('url');
+			var value = model.get('value');
+			var file_name = model.get('file_name');
 
-			this.$('.attachment-url').html(url);
-			this.$('.carbon-view_file').attr('href', url);
-			this.$('.carbon-description').toggleClass('hidden', !url);
+			this.$('.carbon-attachment-file-name').html(file_name);
+			this.$('.carbon-description').toggleClass('hidden', !value);
 		},
 
 		updateThumb: function(model) {
@@ -1207,9 +1242,9 @@ window.carbon = window.carbon || {};
 			this.$('.carbon-description').addClass('hidden');
 			this.$('.carbon-attachment-preview').addClass('hidden');
 			this.$('input.carbon-file-field').attr('value', '').trigger('change');
-			this.$('.attachment-url').html('');
+			this.$('.carbon-attachment-file-name').html('');
 
-			this.model.set('url', '');
+			this.model.set('file_name', '');
 			this.model.set('thumb_url', '');
 		}
 	});
@@ -1302,10 +1337,10 @@ window.carbon = window.carbon || {};
 		disabledClass: 'inactive',
 
 		events: {
-			'click .relationship-left .relationship-list a': 'addItem',
-			'click .relationship-right .relationship-list a': 'removeItem',
-			'keypress .relationship-left .search-field': 'searchFieldKeyPress',
-			'keyup .relationship-left .search-field': 'searchFilter',
+			'click .carbon-relationship-left .carbon-relationship-list a': 'addItem',
+			'click .carbon-relationship-right .carbon-relationship-list a': 'removeItem',
+			'keypress .carbon-relationship-search': 'searchFieldKeyPress',
+			'keyup .carbon-relationship-search': 'searchFilter',
 			'click a .edit-link' : 'editLink'
 		},
 
@@ -1324,13 +1359,13 @@ window.carbon = window.carbon || {};
 			var name = this.model.get('name');
 			var isTouchscreen = carbon.views.main.$body.hasClass('touchscreen');
 
-			this.$leftList = this.$('.relationship-left .relationship-list');
-			this.$rightList = this.$('.relationship-right .relationship-list');
-			this.$searchBox = this.$('.relationship-left .search-field');
+			this.$leftList = this.$('.carbon-relationship-left .carbon-relationship-list');
+			this.$rightList = this.$('.carbon-relationship-right .carbon-relationship-list');
+			this.$searchBox = this.$('.carbon-relationship-left .search-field');
 
-			// Fetch the selected items and deactivate them 
+			// Fetch the selected items and deactivate them
 			// in the left list (if duplicate items are not allowed)
-			this.$rightList.find('input[name="' + name + '[]"]').each(function() {
+			this.$rightList.find('input[name^="' + name + '["]').each(function() {
 				_this.selectedItems.push(this.value);
 				if (!allowDuplicates) {
 					_this.$leftList.find('a[data-value="' + this.value + '"]').parent().addClass(_this.disabledClass);
@@ -1365,9 +1400,9 @@ window.carbon = window.carbon || {};
 			this.$rightList.find('> li > a').each(function() {
 				var link = $(this);
 				var item = _this.buildItem(
-					link.data('item-id'), 
-					link.data('item-title'), 
-					link.data('item-type'), 
+					link.data('item-id'),
+					link.data('item-title'),
+					link.data('item-type'),
 					link.data('item-subtype'),
 					link.data('item-label')
 				);
@@ -1418,6 +1453,7 @@ window.carbon = window.carbon || {};
 				name: this.model.get('name'),
 				item: this.buildItem(id, title, type, subtype, label)
 			});
+			this.model.set( 'nextfieldIndex', this.model.get('nextfieldIndex') + 1 );
 
 			this.$rightList.append(newLi);
 			this.selectedItems.push(value);
@@ -1453,13 +1489,13 @@ window.carbon = window.carbon || {};
 			}
 
 			this.trigger('field:relationship:afterRemove');
-			
+
 			event.preventDefault();
 		},
 
 		setSelectedItemsLabel: function(element, items_number, action) {
 
-			var selected_items_container = element.parents('.relationship-container').find('.selected-items-container .selected-counter');
+			var selected_items_container = element.parents('.carbon-relationship-container').find('.selected-items-container .selected-counter');
 			var selected_items_label_element = selected_items_container.siblings('.selected-label');
 			var selected_label;
 
@@ -1516,7 +1552,8 @@ window.carbon = window.carbon || {};
 				title: title,
 				type: type,
 				subtype: subtype,
-				label: label
+				label: label,
+				fieldIndex: this.model.get('nextfieldIndex')
 			};
 		},
 
@@ -1576,6 +1613,9 @@ window.carbon = window.carbon || {};
 			var timepickerOptions = this.model.get('timepicker_options');
 			var args = {
 				timeFormat: this.model.get('time_format'),
+				showTime: false,
+				changeMonth: true,
+				changeYear: true,
 				beforeShow: function(input, inst) {
 					$('#ui-datepicker-div').addClass('carbon-jquery-ui');
 				}
@@ -1592,6 +1632,13 @@ window.carbon = window.carbon || {};
 			event.preventDefault();
 		}
 	});
+
+	/*--------------------------------------------------------------------------
+	 * RADIO IMAGE
+	 *------------------------------------------------------------------------*/
+
+	// Radio Image MODEL
+	carbon.fields.Model.RadioImage = carbon.fields.Model.Select;
 
 	/*--------------------------------------------------------------------------
 	 * DATE_TIME
@@ -1627,6 +1674,10 @@ window.carbon = window.carbon || {};
 			return group;
 		},
 
+		isTabbed: function() {
+			return /^tabbed/.test(this.get('layout'));
+		},
+
 		validate: function(attrs, options) {
 			var view = carbon.views[this.get('id')];
 
@@ -1643,7 +1694,6 @@ window.carbon = window.carbon || {};
 			_.each(view.groupsCollection.models, function(group) {
 				if ( !group.isValid() ) {
 					groupsValid = false;
-					return; // we have an error, break the loop
 				}
 			});
 
@@ -1672,14 +1722,17 @@ window.carbon = window.carbon || {};
 	// Complex VIEW
 	carbon.fields.View.Complex = carbon.fields.View.extend({
 		events: {
-			'click > .carbon-subcontainer > .carbon-actions a': 'buttonAction',
-			'click > .carbon-subcontainer > .carbon-empty-row a': 'buttonAction'
+			'click > .carbon-subcontainer > .carbon-actions a': 'addEntry',
+			'click > .carbon-subcontainer > .groups-wrapper > .group-tabs-nav-holder > .carbon-actions a': 'addEntry',
+			'click > .carbon-subcontainer > .carbon-empty-row a': 'addEntry',
+			'click > .carbon-subcontainer > .groups-wrapper > .group-tabs-nav-holder > .group-tabs-nav > li > a': 'showGroupTab'
 		},
 
 		initialize: function() {
 			carbon.fields.View.prototype.initialize.apply(this);
 
 			this.multipleGroups = this.model.get('multiple_groups');
+			this.isTabbed = this.model.isTabbed();
 
 			/*
 			 * Groups Collection
@@ -1689,7 +1742,7 @@ window.carbon = window.carbon || {};
 			this.groupsCollection.limit = this.model.get('max');
 
 			// Set the model attribute on which the collection will be sorted. Think of it as "orderBy".
-			this.groupsCollection.comparator = 'order'; 
+			this.groupsCollection.comparator = 'order';
 
 			// Groups collection events (order matters)
 			this.listenTo(this.groupsCollection, 'add',        this.setGroupOrder);  // Set the initial group order
@@ -1701,6 +1754,11 @@ window.carbon = window.carbon || {};
 			this.listenTo(this.groupsCollection, 'sort',       this.reorderGroups);  // Sort event is trigger after the "add" event
 			this.listenTo(this.groupsCollection, 'add',        this.setGroupID);     // Sets an unique ID for each group
 			this.listenTo(this.groupsCollection, 'add',        this.renderGroup);    // Render the added group
+
+			if (this.isTabbed) {
+				this.listenTo(this.groupsCollection, 'add',    this.renderGroupTab); // Render the group tab
+				this.listenTo(this.groupsCollection, 'remove', this.removeGroupTab); // Remove the group tab
+			}
 
 			/*
 			 * View Events
@@ -1729,6 +1787,13 @@ window.carbon = window.carbon || {};
 			// Add a listener that will hide the groups list when the body is clicked
 			if (this.multipleGroups) {
 				this.on('field:rendered', this.hideGroupsListListener);
+			}
+
+			// Group Tabs initialization
+			if (this.isTabbed) {
+				this.model.addClass('carbon-Complex-tabbed');
+
+				this.on('field:rendered', this.initGroupTabs);
 			}
 		},
 
@@ -1775,7 +1840,7 @@ window.carbon = window.carbon || {};
 		},
 
 		toggleIntroRow: function() {
-			this.$introRow.toggle(this.groupsCollection.length === 0);
+			this.$introRow.toggleClass('carbon-empty-row-visible', this.groupsCollection.length === 0);
 		},
 
 		sortGroups: function() {
@@ -1789,6 +1854,7 @@ window.carbon = window.carbon || {};
 		},
 
 		setDOMVariables: function() {
+			this.$tabsNav = this.$('.group-tabs-nav');
 			this.$actions = this.$('.carbon-actions');
 			this.$introRow = this.$('.carbon-empty-row');
 			this.$groupsList = this.$actions.find('ul');
@@ -1800,6 +1866,10 @@ window.carbon = window.carbon || {};
 			var groups = this.model.get('value');
 
 			_.each(groups, function(group) {
+				// Set the value defined by the user in PHP land
+				// This code will run only the first time that the groups are created
+				group.collapsed = _this.model.get('collapsed');
+
 				_this.groupsCollection.add(group, {
 					sort: false
 				});
@@ -1848,7 +1918,7 @@ window.carbon = window.carbon || {};
 			});
 		},
 
-		buttonAction: function(event) {
+		addEntry: function(event) {
 			var $element = $(event.target);
 			var groupName = $element.data('group');
 
@@ -1856,8 +1926,14 @@ window.carbon = window.carbon || {};
 				this.addNewGroup(groupName);
 			} else if (this.multipleGroups) {
 				this.$groupsList.toggle();
+
+				this.$tabsNav.closest('.group-tabs-nav-holder').toggleClass('active');
+
+				var list_position = this.$groupsHolder.offset().left + this.$groupsHolder.width() - this.$actions.offset().left - this.$groupsList.width();
+
+				this.$groupsList.toggleClass('right-aligned', 0 > list_position);
 			} else {
-				this.$actions.find('a.button').trigger('click');
+				this.$actions.find('a.button').eq(0).trigger('click');
 			}
 
 			event.preventDefault();
@@ -1865,12 +1941,15 @@ window.carbon = window.carbon || {};
 
 		hideGroupsListListener: function() {
 			var _this = this;
-			var $actionButton = this.$actions.find('a.button');
 			var $introButton = this.$introRow.find('a');
 
 			carbon.views.main.$body.on('click', function(event) {
-				if (event.target !== $actionButton[0] && event.target !== $introButton[0]) {
+				var isActionButton = $(event.target).parent().hasClass('carbon-button') || event.target === $introButton[0];
+
+				if ( !isActionButton ) {
 					_this.$groupsList.hide();
+
+					_this.$tabsNav.closest('.group-tabs-nav-holder').removeClass('active');
 				}
 			});
 		},
@@ -1897,18 +1976,145 @@ window.carbon = window.carbon || {};
 			var _this = this;
 			var id = model.get('id');
 
-			carbon.views[id] = new carbon.fields.View.Complex.Group({
+			var view = carbon.views[id] = new carbon.fields.View.Complex.Group({
 				el: this.$groupsHolder,
 				model: model
 			});
 
-			carbon.views[id].on('layoutUpdated', function() {
+			view.on('layoutUpdated', function() {
 				_this.trigger('layoutUpdated');
 			});
 
-			carbon.views[id].render(this.model);
+			view.render(this.model);
 
 			return this;
+		},
+
+		renderGroupTab: function(model) {
+			var groupId = model.get('id');
+			var groupOrder = model.get('order');
+			var groupView = carbon.views[groupId];
+			var template = carbon.template('Complex-Group-Tab-Item');
+			var tabItemHTML = template(groupView.templateVariables);
+			var $groupTabs = this.$tabsNav.children();
+
+			if ($groupTabs.length) {
+				$groupTabs.eq(groupOrder - 1).after(tabItemHTML);
+			} else {
+				this.$tabsNav.append(tabItemHTML);
+			}
+		},
+
+		initGroupTabs: function() {
+			this.listenTo(this.groupsCollection, 'add', this.switchToGroupTab);
+
+			this.sortableGroupTabs();
+			this.switchToFirstGroupTab();
+		},
+
+		sortableGroupTabs: function() {
+			var $tabsNav = this.$tabsNav;
+			var $groupsHolder = this.$groupsHolder;
+			var layout = this.model.get('layout');
+			var isVertical = layout === 'tabbed-vertical';
+
+			$tabsNav.sortable({
+				axis: isVertical ? 'y' : 'xy',
+				items: '.group-tab-item',
+				placeholder: 'group-tab-item ui-placeholder-highlight',
+				handle: isVertical ? '.group-handle': false,
+				forcePlaceholderSize: true,
+				start: function(event, ui) {
+					$tabsNav.addClass('carbon-container-shrank');
+
+					ui.item.groupID = ui.item.data('group-id');
+					ui.item.groupView = carbon.views[ui.item.groupID];
+					ui.item.groupModel = ui.item.groupView.model;
+					ui.item.groupsCollection = ui.item.groupModel.collection;
+
+					ui.item.groupView.trigger('sortable', event);
+
+					$(this).sortable('refresh');
+				},
+				stop: function(event, ui) {
+					$tabsNav.removeClass('carbon-container-shrank');
+
+					ui.item.groupView.trigger('sortable', event);
+				},
+				update: function(event, ui) {
+					var newOrder = ui.item.index();
+					var oldOrder = ui.item.groupModel.get('order');
+					var newPosition = oldOrder > newOrder ? newOrder - 1 : newOrder;
+					var $group = ui.item.groupView.$el;
+					var $groups = $groupsHolder.children();
+
+					ui.item.groupModel.set('order', newOrder);
+
+					ui.item.groupsCollection
+						.moveTo(oldOrder, newOrder)
+						.sort();
+
+					if (newPosition < 0) {
+						$group.insertBefore( $groups.first() );
+					} else {
+						$group.insertAfter( $groups.eq(newPosition) );
+					}
+
+					ui.item.groupView.trigger('sortable', event);
+				}
+			});
+		},
+
+		switchToFirstGroupTab: function() {
+			var firstGroupModel = this.groupsCollection.first();
+
+			if (firstGroupModel) {
+				this.switchToGroupTab(firstGroupModel);
+			}
+		},
+
+		switchToPreviousGroupTab: function(model) {
+			var previousTabOrder = model.get('order') - 1;
+			var previousGroupModel = this.groupsCollection.findWhere({ order: previousTabOrder });
+
+			if (previousGroupModel) {
+				this.switchToGroupTab(previousGroupModel);
+			} else {
+				this.switchToFirstGroupTab();
+			}
+		},
+
+		switchToGroupTab: function(model) {
+			var groupId = model.get('id');
+			var $groups = this.$groupsHolder.children();
+			var $group = carbon.views[groupId].$el;
+			var $tabItems = this.$tabsNav.find('.group-tab-item');
+			var $tabItem = $tabItems.filter('[data-group-id="' + groupId + '"]');
+
+			$tabItems.removeClass('active');
+			$groups.removeClass('active');
+
+			$tabItem.addClass('active');
+			$group.addClass('active');
+		},
+
+		removeGroupTab: function(model) {
+			var groupId = model.get('id');
+			var $tabItem = this.$tabsNav.find('.group-tab-item[data-group-id="' + groupId + '"]');
+
+			$tabItem.remove();
+
+			this.switchToPreviousGroupTab(model);
+		},
+
+		showGroupTab: function(event) {
+			var $tabItem = $(event.currentTarget).closest('.group-tab-item');
+			var groupId = $tabItem.data('group-id');
+			var groupModel = this.groupsCollection.get(groupId);
+
+			this.switchToGroupTab(groupModel);
+
+			event.preventDefault();
 		}
 	});
 
@@ -1983,6 +2189,8 @@ window.carbon = window.carbon || {};
 
 			// Listen for fields that want to multiply and create new groups with them
 			this.listenTo(this.fieldsCollection, 'change:multiply', this.multiplier);
+
+			this.listenTo(this.model, 'change:error', this.toggleGroupError);
 		},
 
 		multiplier: function(model) {
@@ -2014,7 +2222,17 @@ window.carbon = window.carbon || {};
 		toggleCollapse: function(model) {
 			var collapsed = model.get('collapsed');
 
+			if (this.complexModel.isTabbed()) {
+				return;
+			}
+
 			this.$el.toggleClass('collapsed', collapsed);
+		},
+
+		toggleGroupError: function (model) {
+			var hasClass = this.model.get('error');
+
+			$('.group-tab-item[data-group-id="' + this.model.id + '"]').toggleClass('carbon-complex-group-has-error', hasClass);
 		},
 
 		eventPropagator: function(event) {
@@ -2046,7 +2264,13 @@ window.carbon = window.carbon || {};
 			var labelTemplate = this.getLabelTemplate();
 			var label = labelTemplate || this.model.get('label');
 
-			this.$('> .carbon-drag-handle .group-name').html( label );
+			if ( this.complexModel.isTabbed() ) {
+				var $groupName = this.getTabElement().find('.group-name');
+			} else {
+				var $groupName = this.$('> .carbon-drag-handle .group-name');
+			}
+
+			$groupName.html(label);
 		},
 
 		hasLabelTemplate: function() {
@@ -2077,6 +2301,18 @@ window.carbon = window.carbon || {};
 			var groupOrder = model.get('order');
 
 			this.$('> .carbon-drag-handle .group-number').text(groupOrder + 1);
+
+			if ( this.complexModel.isTabbed() ) {
+				this.getTabElement().find('.group-number').text(groupOrder + 1);
+			}
+		},
+
+		getTabElement: function() {
+			var complexModelId = this.complexModel.get('id');
+			var complexView = carbon.views[complexModelId];
+			var groupId = this.model.get('id');
+
+			return complexView.$tabsNav.find('[data-group-id="' + groupId + '"]');
 		},
 
 		getLabelTemplate: function() {
@@ -2091,24 +2327,27 @@ window.carbon = window.carbon || {};
 					var fieldValue = fieldModel.get('value');
 
 					templateVariables[ fieldName ] = fieldValue;
-					templateVariables._models[ fieldName ] = fieldModel; // pass the field model to the template, useful to advanced users
+
+					// pass the field model to the template, useful to advanced users
+					// e.g.: the user can show an image thumbnail on a collapsed complex
+					//       field to create a "gallery".
+					templateVariables._models[ fieldName ] = fieldModel;
 				});
 
 				return template(templateVariables);
 			} catch (e) {
 				// no label template found
 			}
-
-			return null;
 		},
 
 		render: function(complexModel) {
 			this.complexModel = complexModel;
+			this.complexView = carbon.views[complexModel.get('id')];
 
 			var groupOrder = this.model.get('order');
 			var template = carbon.template('Complex-Group');
 
-			_.extend(this.templateVariables, this.model.attributes, {
+			this.templateVariables = _.extend({}, this.templateVariables, this.model.attributes, {
 				complex_id: this.complexModel.get('id'),
 				complex_name: this.complexModel.get('name'),
 				layout: this.complexModel.get('layout'),
@@ -2148,7 +2387,7 @@ window.carbon = window.carbon || {};
 
 			// Completely unbind the view
 			this.undelegateEvents();
-			this.$el.removeData().unbind(); 
+			this.$el.removeData().unbind();
 
 			this.$el.addClass('removed').fadeOut(function() {
 				// Remove view from the DOM
@@ -2199,6 +2438,9 @@ window.carbon = window.carbon || {};
 
 		afterRenderInit: function() {
 			var _this = this;
+
+			// Update collapse state/visibility
+			this.toggleCollapse(this.model);
 
 			// Trigger the add event on the collection, this should initialize the fields rendering
 			this.fieldsCollection.each(function(model) {

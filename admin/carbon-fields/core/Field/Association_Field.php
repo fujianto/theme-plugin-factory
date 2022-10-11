@@ -110,7 +110,9 @@ class Association_Field extends Relationship_Field {
 			$title = get_the_title( $id );
 		} elseif ( $type === 'term' ) {
 			$term = get_term_by( 'id', $id, $subtype );
-			$title = $term->name;
+			if ( $term ) {
+				$title = $term->name;
+			}
 		} elseif ( $type === 'user' ) {
 			$title = get_the_author_meta( 'user_login', $id );
 		} elseif ( $type === 'comment' ) {
@@ -354,6 +356,13 @@ class Association_Field extends Relationship_Field {
 			'allow_duplicates' => $this->allow_duplicates,
 		) );
 
+		$i = 0;
+		foreach ( $field_data['value'] as $key => $value ) {
+			$field_data['value'][$key]['fieldIndex'] = $i;
+			$i++;
+		}
+		$field_data['nextfieldIndex'] = $i;
+
 		return $field_data;
 	}
 
@@ -366,19 +375,20 @@ class Association_Field extends Relationship_Field {
 	public function item_template( $display_input = true ) {
 		?>
 		<li>
+			<span class="mobile-handle dashicons-before dashicons-menu"></span>
 			<a href="#" data-item-id="{{{ item.id }}}" data-item-title="{{{ item.title }}}" data-item-type="{{{ item.type }}}" data-item-subtype="{{{ item.subtype }}}" data-item-label="{{{ item.label }}}" data-value="{{{ item.type }}}:{{{ item.subtype }}}:{{{ item.id }}}">
 				<# if ( item.edit_link ) { #>
-					<em class="edit-link" data-href="{{{ item.edit_link }}}"><?php _e( 'Edit', 'carbon-fields' ); ?></em>
+					<em class="edit-link dashicons-before dashicons-edit" data-href="{{{ item.edit_link }}}"><?php _e( 'Edit', 'carbon-fields' ); ?></em>
 				<# } #>
 				<em>{{{ item.label }}}</em>
-				<span></span>
+				<span class="dashicons-before dashicons-plus-alt"></span>
 				{{{ item.title }}}
 				<# if (item.is_trashed) { #>
-					<i class="trashed"></i>
+					<i class="trashed dashicons-before dashicons-trash"></i>
 				<# } #>
 			</a>
 			<?php if ( $display_input ) :  ?>
-				<input type="hidden" name="{{{ name }}}[]" value="{{{ item.type }}}:{{{ item.subtype }}}:{{{ item.id }}}" />
+				<input type="hidden" name="{{{ name }}}[{{{ item.fieldIndex }}}]" value="{{{ item.type }}}:{{{ item.subtype }}}:{{{ item.id }}}" />
 			<?php endif; ?>
 		</li>
 		<?php

@@ -21,6 +21,27 @@ class Relationship_Field extends Field {
 	}
 
 	/**
+	 * Load the field value from an input array based on it's name
+	 *
+	 * @param array $input (optional) Array of field names and values. Defaults to $_POST
+	 **/
+	public function set_value_from_input( $input = null ) {
+		if ( is_null( $input ) ) {
+			$input = $_POST;
+		}
+
+		if ( ! isset( $input[ $this->name ] ) ) {
+			$this->set_value( null );
+		} else {
+			$value = stripslashes_deep( $input[ $this->name ] );
+			if ( is_array( $value ) ) {
+				$value = array_values( $value );
+			}
+			$this->set_value( $value );
+		}
+	}
+
+	/**
 	 * Set the post type of the entries.
 	 *
 	 * @param string|array $post_type Post type
@@ -94,7 +115,7 @@ class Relationship_Field extends Field {
 	 */
 	public function get_item_label( $id, $type, $subtype = '' ) {
 		$object = get_post_type_object( $subtype );
-		$label = $object->labels->singular_name;
+		$label = $object ? $object->labels->singular_name : null;
 
 		/**
 		 * Filter the label of the relationship item.
@@ -167,10 +188,12 @@ class Relationship_Field extends Field {
 	public function to_json( $load ) {
 		$field_data = parent::to_json( $load );
 
+		$field_data['nextfieldIndex'] = 0;
 		if ( ! empty( $field_data['value'] ) ) {
 			$value = array();
 
 			$field_data['value'] = maybe_unserialize( $field_data['value'] );
+			$i = 0;
 			foreach ( $field_data['value'] as $single_value ) {
 				$post_type = get_post_type( $single_value );
 				$value[] = array(
@@ -180,8 +203,11 @@ class Relationship_Field extends Field {
 					'subtype' => $post_type,
 					'label' => $this->get_item_label( $single_value, 'post', $post_type ),
 					'is_trashed' => ( get_post_status( $single_value ) == 'trash' ),
+					'fieldIndex' => $i,
 				);
+				$i++;
 			}
+			$field_data['nextfieldIndex'] = $i;
 			$field_data['value'] = $value;
 		}
 
@@ -199,15 +225,15 @@ class Relationship_Field extends Field {
 	 */
 	public function template() {
 		?>
-		<div class="relationship-container">
+		<div class="carbon-relationship-container">
 			<div class="selected-items-container">
 				<strong>
-					<# 
+					<#
 					var selected_items_length = 0;
 					if ( value ) {
 						selected_items_length = value.length;
 					} #>
-					<span class="selected-counter">{{{ selected_items_length }}}</span> 
+					<span class="selected-counter">{{{ selected_items_length }}}</span>
 					<span class="selected-label" data-single-label="<?php _e( 'selected item', 'carbon-fields' ); ?>" data-plural-label="<?php _e( 'selected items', 'carbon-fields' ); ?>">
 						<?php _e( 'selected items', 'carbon-fields' ); ?>
 					</span>
@@ -219,32 +245,34 @@ class Relationship_Field extends Field {
 						<span class="remaining"><?php _e( 'out of', 'carbon-fields' ); ?> {{{ max }}}</span>
 					<# } #>
 				</strong>
-				
 			</div>
-			<div class="relationship-left">
-				<div class="search-field">
-					<input type="text" class="search-field" placeholder="<?php esc_attr_e( 'Search', 'carbon-fields' ); ?>" />
+
+			<div class="search-field carbon-relationship-search dashicons-before dashicons-search">
+				<input type="text" class="search-field" placeholder="<?php esc_attr_e( 'Search...', 'carbon-fields' ); ?>" />
+			</div>
+
+			<div class="carbon-relationship-body">
+				<div class="carbon-relationship-left">
+					<ul class="carbon-relationship-list">
+						<# if (options) { #>
+							<# _.each(options, function(item) { #>
+								<?php echo $this->item_template( false ); ?>
+							<# }); #>
+						<# } #>
+					</ul>
 				</div>
 
-				<ul class="relationship-list">
-					<# if (options) { #>
-						<# _.each(options, function(item) { #>
-							<?php echo $this->item_template( false ); ?>
-						<# }); #>
-					<# } #>
-				</ul>
-			</div>
+				<div class="carbon-relationship-right">
+					<label><?php _e( 'Associated:', 'carbon-fields' ); ?></label>
 
-			<div class="relationship-right">
-				<label><?php _e( 'Associated:', 'carbon-fields' ); ?></label>
-
-				<ul class="relationship-list">
-					<# if (value) { #>
-						<# _.each(value, function(item) { #>
-							<?php echo $this->item_template(); ?>
-						<# }); #>
-					<# } #>
-				</ul>
+					<ul class="carbon-relationship-list">
+						<# if (value) { #>
+							<# _.each(value, function(item) { #>
+								<?php echo $this->item_template(); ?>
+							<# }); #>
+						<# } #>
+					</ul>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -259,18 +287,18 @@ class Relationship_Field extends Field {
 	public function item_template( $display_input = true ) {
 		?>
 		<li>
-			<span class="mobile-handle"></span>
+			<span class="mobile-handle dashicons-before dashicons-menu"></span>
 			<a href="#" data-item-id="{{{ item.id }}}" data-item-title="{{{ item.title }}}" data-item-type="{{{ item.type }}}" data-item-subtype="{{{ item.subtype }}}" data-item-label="{{{ item.label }}}" data-value="{{{ item.id }}}">
 				<# if ( item.edit_link ) { #>
-					<em class="edit-link" data-href="{{{ item.edit_link }}}"><?php _e( 'Edit', 'carbon-fields' ); ?></em>
+					<em class="edit-link dashicons-before dashicons-edit" data-href="{{{ item.edit_link }}}"><?php _e( 'Edit', 'carbon-fields' ); ?></em>
 				<# } #>
 				<em>{{{ item.label }}}</em>
-				<span></span>
+				<span class="dashicons-before dashicons-plus-alt"></span>
+
 				{{{ item.title }}}
-				
 			</a>
 			<?php if ( $display_input ) :  ?>
-				<input type="hidden" name="{{{ name }}}[]" value="{{{ item.id }}}" />
+				<input type="hidden" name="{{{ name }}}[{{{ item.fieldIndex }}}]" value="{{{ item.id }}}" />
 			<?php endif; ?>
 		</li>
 		<?php

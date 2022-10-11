@@ -26,7 +26,7 @@ class Term_Meta_Container extends Container {
 		parent::__construct( $title );
 
 		if ( ! $this->get_datastore() ) {
-			$this->set_datastore( new Term_Meta_Datastore() );
+			$this->set_datastore( new Term_Meta_Datastore(), $this->has_default_datastore() );
 		}
 	}
 
@@ -141,46 +141,7 @@ class Term_Meta_Container extends Container {
 	 **/
 	public function set_term_id( $term_id ) {
 		$this->term_id = $term_id;
-		$this->store->set_id( $term_id );
-	}
-
-
-	/**
-	 * Perform checks whether there is a field registered with the name $name.
-	 * If not, the field name is recorded.
-	 *
-	 * @param string $name
-	 **/
-	public function verify_unique_field_name( $name ) {
-		if ( empty( $this->settings['taxonomy'] ) ) {
-			Incorrect_Syntax_Exception::raise( 'Panel instance is not setup correctly (missing taxonomy)' );
-		}
-
-		foreach ( $this->settings['taxonomy'] as $taxonomy ) {
-			if ( ! isset( self::$registered_field_names[ $taxonomy ] ) ) {
-				self::$registered_field_names[ $taxonomy ] = array();
-			}
-
-			if ( in_array( $name, self::$registered_field_names[ $taxonomy ] ) ) {
-				Incorrect_Syntax_Exception::raise( 'Field name "' . $name . '" already registered' );
-			}
-
-			self::$registered_field_names[ $taxonomy ][] = $name;
-		}
-	}
-
-	/**
-	 * Remove field name $name from the list of unique field names
-	 *
-	 * @param string $name
-	 **/
-	public function drop_unique_field_name( $name ) {
-		foreach ( $this->settings['taxonomy'] as $taxonomy ) {
-			$index = array_search( $name, self::$registered_field_names[ $taxonomy ] );
-			if ( $index !== false ) {
-				unset( self::$registered_field_names[ $taxonomy ][ $index ] );
-			}
-		}
+		$this->get_datastore()->set_id( $term_id );
 	}
 
 	/**

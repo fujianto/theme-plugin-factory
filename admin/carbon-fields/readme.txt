@@ -1,9 +1,9 @@
 === Carbon Fields ===
-Contributors: htmlburger, tyxla, m1r0, xsisqox, stoyanov.gs, catahac, avakul, panchev, kamenarov, dilirity, sstoqnov, kaloyanivanov, pkostadinov, brutalenemy666, magadanski_uchen, germozy
+Contributors: htmlburger, m1r0, atanasangelovdev, kamenarov, stoyanov.gs, pkostadinov, panchev, tyxla, xsisqox, avakul, dilirity, sstoqnov, kaloyanivanov, brutalenemy666, magadanski_uchen, germozy
 Tags: custom, field, custom field, advanced, repeater, post, type, text, textarea, file, image, rich text, wysiwyg, select, dropdown, checkbox, radio, association, relationship, map, taxonomy, term, user, comment, option, options, widget, simple fields, magic fields, more fields, post meta, term meta, user meta, comment meta, theme options, custom widget, nested fields
-Requires at least: 4.0
-Tested up to: 4.6
-Stable tag: 1.2
+Requires at least: 5.0
+Tested up to: 5.7.1
+Stable tag: 3.3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,7 +38,7 @@ Supports PHP5.3 or higher.
 == Frequently Asked Questions ==
 
 = Q. What is the minimum supported PHP version? =
-A. The plugin supports PHP 5.3 and higher. 
+A. The plugin supports PHP 5.3 and higher.
 
 = Q. I don't know much about PHP. Where is the administration interface for creating containers and fields? =
 A. There is no admin interface. Containers and fields are created programatically, please refer to the Usage & Documentation section for more information.
@@ -76,6 +76,55 @@ A. Sure, go ahead! It is completely open source.
 6. Example that contains most of the available fields, nested fields included.
 
 == Changelog ==
+
+= 3.0.0 =
+Version 3.0.0 includes major rewrite of the front-end of Carbon Fields and thus includes a number of breaking changes.
+Please refer to the upgrade guide over at http://carbonfields.net/.
+
+= 2.0.0 =
+Version 2.0.0 includes major rewrite of both the back-end and front-end of Carbon Fields and thus includes a number of breaking changes.
+Please refer to the upgrade guide over at http://carbonfields.net/.
+
+= 1.6 =
+Special thanks to all contributors for this release including @pedro-mendonca, @elvishp2006, @timiwahalahti, @campusboy87, @m1r0, @pkostadinov-2create, @georgeHtmlBurger, @yuliyan and others.
+
+ * Added a new field: Radio Image
+ * Added new conditional logic comparison operators: `INCLUDES` and `EXCLUDES` which work for array-based fields (e.g. Set_Field) and string-based fields (e.g. Text_Field)
+ * Added `Complex_Field::set_collapsed()` method which allows you to control if groups should display collapsed on page load
+ * Added partial support for duplicate container names, the only exception being that 2 theme options containers with the same name will still not be allowed
+ * Fixed several Sidebar/Widget related issues
+ * Fixed Relationship/Assosiation field issues with deleted items
+ * Fixed User Meta container title being visible when the container itself is not.
+ * Fixed error messages sometimes not being shown for containers
+ * Updated `->set_options()` and `->add_options()` to both be able to receive callbacks and arrays.
+ * Fixed various Nav_Menu_Container issues
+ * Fixed "Click Here" adding 2 entries to empty complex fields
+ * Added `User_Meta_Container::show_for()` method to allow users other than administrators to interact with user meta containers
+ * The Media popup will now properly mark any previously selected attachment
+ * A number of i18n updates, stability improvements and fixes.
+
+= 1.5 =
+ * Improved GUI! Big thanks to @holmar and @georgknabl for the great contribution! ([preview](https://cloud.githubusercontent.com/assets/7590968/18725040/fdc911f8-803e-11e6-9749-a218b0584e27.png))
+ * Added Brazilian Portuguese (pt_BR) translation (thanks to @elvishp2006).
+ * Many bugfixes and improvements.
+
+= 1.4 =
+ * Introduced the Complex Field vertical tabbed layout.
+ * Allow fields with the same name to be used in different Carbon Containers.
+ * Added German (de_DE) translation (thanks to @AlexBa).
+ * Added Swedish (sv_SE) translation (thanks to @fhqvst).
+ * Added Russian (ru_RU) translation (thanks to @andrewostrin).
+ * Added Spanish (es_ES) translation (thanks to @fitodac).
+ * Performance improvements.
+ * Some i18n improvements.
+ * Few bugs squashed.
+
+= 1.3 =
+ * Introduced the Complex Field tabbed layout ([example](https://cloud.githubusercontent.com/assets/1612178/17105196/ea28f2f4-528e-11e6-9841-b93c0f12b283.jpg)).
+ * Added Portuguese (pt_PT) translation (thanks @pedro-mendonca).
+ * Allow saving empty complex field groups.
+ * Added a filter for the Google Maps API key.
+ * Minor improvements and fixes.
 
 = 1.2 =
 * Ensured compabitility with the WordPress Coding Standards.

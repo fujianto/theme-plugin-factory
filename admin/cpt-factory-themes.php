@@ -1,4 +1,12 @@
 <?php
+if (!function_exists('is_plugin_active')) {
+    include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+} else {
+	if( !is_plugin_active('carbon-fields/carbon-fields-plugin.php')){
+		require_once FACTORY_DIR. '/admin/carbon-fields/carbon-fields-plugin.php';
+	}
+}
+
 use Carbon_Fields\Container;
 use Carbon_Fields\Field;
 
@@ -61,6 +69,7 @@ if ( ! function_exists('tpf_register_cpt_themes') ) {
 			'exclude_from_search'   => false,
 			'publicly_queryable'    => true,
 			'rewrite'               => $rewrite,
+			'show_in_rest' => true,
 			'capability_type'       => 'post',
 		);
 
@@ -107,6 +116,7 @@ if ( ! function_exists( 'tpf_register_tax_theme_type' ) ) {
 			'show_admin_column'          => true,
 			'show_in_nav_menus'          => true,
 			'show_tagcloud'              => true,
+			'show_in_rest' => true,
 		);
 
 		register_taxonomy( 'tpf-theme-types', array( 'tpf-themes' ), $args );
@@ -153,6 +163,7 @@ if ( ! function_exists( 'tpf_register_tax_theme_feature' ) ) {
 			'show_admin_column'          => true,
 			'show_in_nav_menus'          => true,
 			'show_tagcloud'              => true,
+			'show_in_rest' => true,
 		);
 
 		register_taxonomy( 'tpf-theme-features', array( 'tpf-themes' ), $args );
@@ -161,37 +172,75 @@ if ( ! function_exists( 'tpf_register_tax_theme_feature' ) ) {
 	add_action( 'init', 'tpf_register_tax_theme_feature', 0 );
 }
 
-/*-------------------------------------------------------------------------------
-	Create Metabox For Theme Detail
--------------------------------------------------------------------------------*/
-$prefix = '_tpf_meta_';
+/* Register all metabox to tpf-themes rest api */
+add_action( 'rest_api_init', 'tpf_register_metabox_rest');
 
-Container::make('post_meta', __('Theme Detail', 'tp-factory'))
-    ->show_on_post_type( 'tpf-themes' )
-    ->add_tab(__('General', 'tp-factory'), array(
-    	Field::make('text', $prefix.'slug', __( 'Theme Slug', 'tp-factory' )),
-    	Field::make('rich_text', $prefix.'description', __( 'Description', 'tp-factory' )),
-        Field::make('text', $prefix.'version', __( 'Version', 'tp-factory' ))
-        	->help_text(__( 'The theme current version', 'tp-factory' )),
-        // Parent Theme
-        Field::make('text', $prefix.'parent', __( 'Parent Theme', 'tp-factory' ))
-        	->help_text(__( 'Enter parent theme slug', 'tp-factory' )),
-    ))
-	->add_tab(__('Links'), array(
-		Field::make('text', $prefix.'download_url', __( 'Download URL', 'tp-factory' ))
-        	->help_text(__( 'URL to ZIP / theme files', 'tp-factory' )),
-        Field::make('text', $prefix.'demo_url', __( 'Demo URL', 'tp-factory' ))
-        	->help_text(__( 'URL to theme demo site', 'tp-factory' )),
-    	Field::make('text', $prefix.'demo_mask_url', __( 'Demo Mask URL', 'tp-factory' ))
-        	->help_text(__( 'Masked URL to theme demo site', 'tp-factory' )),
-        Field::make('text', $prefix.'repo_url', __( 'Repository URL', 'tp-factory' ))
-        	->help_text(__( 'URL to github or other repository', 'tp-factory' )),
-        Field::make('text', $prefix.'purchase_url', __( 'Purchase URL', 'tp-factory' ))
-        	->help_text(__( 'URL to where theme can be purcashed', 'tp-factory' )),
-        Field::make('text', $prefix.'support_url', __( 'Support URL', 'tp-factory' ))
-        	->help_text(__( 'URL to Theme support', 'tp-factory' )),
-    	Field::make('text', $prefix.'translation_url', __( 'Translation URL', 'tp-factory' ))
-        	->help_text(__( 'URL to Theme translation', 'tp-factory' )),
-        Field::make('text', $prefix.'documentation_url', __( 'Documentation URL', 'tp-factory' ))
-        	->help_text(__( 'URL to Theme translation', 'tp-factory' )),
+function tpf_register_metabox_rest() {
+	function get_all_post_meta($post) {
+			$meta = get_post_meta($post['id']);
+			$current_meta = get_post_meta($post['id']);
+			$meta_data = [];
+
+			foreach($current_meta as $key => $obj){
+				$meta_data[$key] = $obj[0];
+			}
+			
+			return $meta_data;
+		}
+
+    register_rest_field( 'tpf-themes', 'post_meta', array(
+				'show_in_rest' => true,
+        'get_callback' => 'get_all_post_meta',
     ));
+}
+
+add_action( 'carbon_fields_register_fields', 'crb_attach_theme_options' );
+
+function crb_attach_theme_options() {
+    /*-------------------------------------------------------------------------------
+    Create Metabox For Theme Detail
+    -------------------------------------------------------------------------------*/
+    $prefix = '_tpf_meta_';
+
+    Container::make('post_meta', __('Theme Detail', 'tp-factory'))
+        ->show_on_post_type( 'tpf-themes' )
+        ->add_tab(__('General', 'tp-factory'), array(
+            Field::make('text', $prefix.'slug', __( 'Theme Slug', 'tp-factory' ))
+							->set_visible_in_rest_api( $visible = true ),
+            Field::make('rich_text', $prefix.'description', __( 'Description', 'tp-factory' ))
+							->set_visible_in_rest_api( $visible = true ),
+            Field::make('text', $prefix.'version', __( 'Version', 'tp-factory' ))
+							->set_visible_in_rest_api( $visible = true )
+							->help_text(__( 'The theme current version', 'tp-factory' )),
+            // Parent Theme
+            Field::make('text', $prefix.'parent', __( 'Parent Theme', 'tp-factory' ))
+							->set_visible_in_rest_api( $visible = true )
+							->help_text(__( 'Enter parent theme slug', 'tp-factory' )),
+        ))
+        ->add_tab(__('Links'), array(
+            Field::make('text', $prefix.'download_url', __( 'Download URL', 'tp-factory' ))
+								->set_visible_in_rest_api( $visible = true )
+                ->help_text(__( 'URL to ZIP / theme files', 'tp-factory' )),
+            Field::make('text', $prefix.'demo_url', __( 'Demo URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to theme demo site', 'tp-factory' )),
+            Field::make('text', $prefix.'demo_mask_url', __( 'Demo Mask URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'Masked URL to theme demo site', 'tp-factory' )),
+            Field::make('text', $prefix.'repo_url', __( 'Repository URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to github or other repository', 'tp-factory' )),
+            Field::make('text', $prefix.'purchase_url', __( 'Purchase URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to where theme can be purcashed', 'tp-factory' )),
+            Field::make('text', $prefix.'support_url', __( 'Support URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to Theme support', 'tp-factory' )),
+            Field::make('text', $prefix.'translation_url', __( 'Translation URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to Theme translation', 'tp-factory' )),
+            Field::make('text', $prefix.'documentation_url', __( 'Documentation URL', 'tp-factory' ))
+                ->set_visible_in_rest_api( $visible = true )
+								->help_text(__( 'URL to Theme translation', 'tp-factory' )),
+        ));
+}

@@ -13,14 +13,6 @@ use Carbon_Fields\Exception\Incorrect_Syntax_Exception;
  */
 class Post_Meta_Container extends Container {
 	/**
-	 * List of registered unique field names
-	 *
-	 * @see verify_unique_field_name()
-	 * @var array
-	 */
-	protected static $registered_field_names;
-
-	/**
 	 * ID of the post the container is working with
 	 *
 	 * @see init()
@@ -60,7 +52,7 @@ class Post_Meta_Container extends Container {
 		parent::__construct( $title );
 
 		if ( ! $this->get_datastore() ) {
-			$this->set_datastore( new Post_Meta_Datastore() );
+			$this->set_datastore( new Post_Meta_Datastore(), $this->has_default_datastore() );
 		}
 	}
 
@@ -394,45 +386,7 @@ class Post_Meta_Container extends Container {
 	 **/
 	public function set_post_id( $post_id ) {
 		$this->post_id = $post_id;
-		$this->store->set_id( $post_id );
-	}
-
-	/**
-	 * Perform checks whether there is a field registered with the name $name.
-	 * If not, the field name is recorded.
-	 *
-	 * @param string $name
-	 **/
-	public function verify_unique_field_name( $name ) {
-		if ( empty( $this->settings['post_type'] ) ) {
-			Incorrect_Syntax_Exception::raise( 'Panel instance is not setup correctly (missing post type)' );
-		}
-
-		foreach ( $this->settings['post_type'] as $post_type ) {
-			if ( ! isset( self::$registered_field_names[ $post_type ] ) ) {
-				self::$registered_field_names[ $post_type ] = array();
-			}
-
-			if ( in_array( $name, self::$registered_field_names[ $post_type ] ) ) {
-				Incorrect_Syntax_Exception::raise( 'Field name "' . $name . '" already registered' );
-			}
-
-			self::$registered_field_names[ $post_type ][] = $name;
-		}
-	}
-
-	/**
-	 * Remove field name $name from the list of unique field names
-	 *
-	 * @param string $name
-	 **/
-	public function drop_unique_field_name( $name ) {
-		foreach ( $this->settings['post_type'] as $post_type ) {
-			$index = array_search( $name, self::$registered_field_names[ $post_type ] );
-			if ( $index !== false ) {
-				unset( self::$registered_field_names[ $post_type ][ $index ] );
-			}
-		}
+		$this->get_datastore()->set_id( $post_id );
 	}
 
 	/**
@@ -444,8 +398,9 @@ class Post_Meta_Container extends Container {
 	public function show_on_page_children( $parent_page_path ) {
 		$page = get_page_by_path( $parent_page_path );
 
+		$this->show_on_post_type( 'page' );
+
 		if ( $page ) {
-			$this->show_on_post_type( 'page' );
 			$this->settings['show_on']['parent_page_id'] = $page->ID;
 		} else {
 			$this->settings['show_on']['parent_page_id'] = -1;
@@ -461,14 +416,17 @@ class Post_Meta_Container extends Container {
 	 * @return object $this
 	 **/
 	public function show_on_page( $page ) {
-		if ( is_int( $page ) ) {
-			$page_obj = get_post( $page );
+		$page_id = absint( $page );
+
+		if ( $page_id && $page_id == $page ) {
+			$page_obj = get_post( $page_id );
 		} else {
 			$page_obj = get_page_by_path( $page );
 		}
 
+		$this->show_on_post_type( 'page' );
+
 		if ( $page_obj ) {
-			$this->show_on_post_type( 'page' );
 			$this->settings['show_on']['page_id'] = $page_obj->ID;
 		} else {
 			$this->settings['show_on']['page_id'] = -1;
@@ -498,7 +456,10 @@ class Post_Meta_Container extends Container {
 	 * @return object $this
 	 **/
 	public function show_on_template( $template_path ) {
-		$this->show_on_post_type( 'page' );
+		// Backwards compatibility where only pages support templates
+		if ( version_compare( get_bloginfo( 'version' ), '4.7', '<' ) ) {
+			$this->show_on_post_type( 'page' );
+		}
 
 		if ( is_array( $template_path ) ) {
 			foreach ( $template_path as $path ) {

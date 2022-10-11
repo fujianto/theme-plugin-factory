@@ -122,6 +122,9 @@ window.carbon = window.carbon || {};
 			// Listen for model changes in the fields collection.
 			this.listenToOnce(this.fieldsCollection, 'change:value', this.changeListener);
 
+			// Disable/enable the container's inputs when visibility changes
+			this.listenTo(this.model, 'change:visible', this.disableInputs);
+
 			// Listen for container class updates
 			this.listenTo(this.model, 'change:classes', this.updateClass);
 
@@ -229,6 +232,15 @@ window.carbon = window.carbon || {};
 				});
 			}
 
+		},
+
+		disableInputs: function(model) {
+			if ( ! this.$el.is('fieldset') ) {
+				return;
+			}
+
+			var disabled = !model.get('visible');
+			this.$el.attr('disabled', disabled);
 		},
 
 		updateClass: function(model) {
@@ -429,7 +441,11 @@ window.carbon = window.carbon || {};
 						$errorHolder.find('strong').text(errorText);
 					} else {
 						$errorHolder = $('<div class="settings-error error hidden below-h2 carbon-error-required"><p><strong>' + errorText + '</strong></p></div>');
-						$errorHolder.insertAfter('#wpbody-content > .wrap > h2').slideDown();
+						var $target = $('#wpbody-content > .wrap > :header:first');
+						while ( $target.next( 'a' ).length > 0 ) {
+							$target = $target.next( 'a' );
+						}
+						$errorHolder.insertAfter( $target ).show();
 					}
 					var $firstErrorField = $('.carbon-highlight :input:first');
 					
@@ -909,6 +925,16 @@ window.carbon = window.carbon || {};
 			}
 
 			this.model.set('visible', visible);
+		},
+
+		toggleVisibility: function(model) {
+
+			var id = model.get('id');
+			var visible = model.get('visible');
+			var $wrapper = carbon.views.main.$body.find('#' + id + '-wrapper');
+
+			$wrapper.toggleClass( 'carbon-hidden', !visible );
+			$wrapper.removeClass( 'carbon-cloaked' );
 		}
 	});
 
