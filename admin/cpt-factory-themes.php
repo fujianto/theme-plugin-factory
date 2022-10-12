@@ -204,6 +204,15 @@ function tpf_register_metabox_rest() {
 		return array( 'tpf-theme-features' => $term_features_data, 'tpf-theme-types' => $term_types_data);
 	}
 
+	function get_rest_featured_image( $object, $field_name, $request ) {
+		if( $object['featured_media'] ){
+				$img = wp_get_attachment_image_src( $object['featured_media'], 'app-thumb' );
+				return $img[0];
+		}
+
+		return false;
+	}
+
 	register_rest_field( 'tpf-themes', 'post_meta', array(
 			'show_in_rest' => true,
 			'get_callback' => 'get_all_post_meta',
@@ -212,6 +221,11 @@ function tpf_register_metabox_rest() {
 	register_rest_field( 'tpf-themes', 'post_terms', array(
 			'show_in_rest' => true,
 			'get_callback' => 'get_all_custom_taxonomy',
+	));
+
+	register_rest_field( 'tpf-themes', 'featured_image', array(
+			'show_in_rest' => true,
+			'get_callback' => 'get_rest_featured_image',
 	));
 }
 
