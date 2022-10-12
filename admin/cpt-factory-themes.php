@@ -176,7 +176,7 @@ if ( ! function_exists( 'tpf_register_tax_theme_feature' ) ) {
 add_action( 'rest_api_init', 'tpf_register_metabox_rest');
 
 function tpf_register_metabox_rest() {
-	function get_all_post_meta($post) {
+	function tpf_get_all_post_meta($post) {
 		$current_meta = get_post_meta($post['id']);
 		$meta_data = [];
 
@@ -187,7 +187,7 @@ function tpf_register_metabox_rest() {
 		return $meta_data;
 	}
 
-	function get_all_custom_taxonomy() {
+	function tpf_get_all_custom_taxonomy() {
 		$term_features = get_the_terms(get_the_ID(),  'tpf-theme-features');
 		$term_types = get_the_terms(get_the_ID(),  'tpf-theme-types');
 		$term_features_data = [];
@@ -204,7 +204,7 @@ function tpf_register_metabox_rest() {
 		return array( 'tpf-theme-features' => $term_features_data, 'tpf-theme-types' => $term_types_data);
 	}
 
-	function get_rest_featured_image( $object, $field_name, $request ) {
+	function tpf_get_rest_featured_image( $object, $field_name, $request ) {
 		if( $object['featured_media'] ){
 				$img = wp_get_attachment_image_src( $object['featured_media'], 'app-thumb' );
 				return $img[0];
@@ -215,17 +215,17 @@ function tpf_register_metabox_rest() {
 
 	register_rest_field( 'tpf-themes', 'post_meta', array(
 			'show_in_rest' => true,
-			'get_callback' => 'get_all_post_meta',
+			'get_callback' => 'tpf_get_all_post_meta',
 	));
 
 	register_rest_field( 'tpf-themes', 'post_terms', array(
 			'show_in_rest' => true,
-			'get_callback' => 'get_all_custom_taxonomy',
+			'get_callback' => 'tpf_get_all_custom_taxonomy',
 	));
 
 	register_rest_field( 'tpf-themes', 'featured_image', array(
 			'show_in_rest' => true,
-			'get_callback' => 'get_rest_featured_image',
+			'get_callback' => 'tpf_get_rest_featured_image',
 	));
 }
 
