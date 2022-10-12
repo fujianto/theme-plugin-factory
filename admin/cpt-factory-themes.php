@@ -177,21 +177,42 @@ add_action( 'rest_api_init', 'tpf_register_metabox_rest');
 
 function tpf_register_metabox_rest() {
 	function get_all_post_meta($post) {
-			$meta = get_post_meta($post['id']);
-			$current_meta = get_post_meta($post['id']);
-			$meta_data = [];
+		$current_meta = get_post_meta($post['id']);
+		$meta_data = [];
 
-			foreach($current_meta as $key => $obj){
-				$meta_data[$key] = $obj[0];
-			}
-			
-			return $meta_data;
+		foreach($current_meta as $key => $obj){
+			$meta_data[$key] = $obj[0];
+		}
+		
+		return $meta_data;
+	}
+
+	function get_all_custom_taxonomy() {
+		$term_features = get_the_terms(get_the_ID(),  'tpf-theme-features');
+		$term_types = get_the_terms(get_the_ID(),  'tpf-theme-types');
+		$term_features_data = [];
+		$term_types_data = [];
+
+		foreach($term_features as $key => $obj){
+			 $term_features_data[$term_features[$key]->slug] =$term_features[$key];
 		}
 
-    register_rest_field( 'tpf-themes', 'post_meta', array(
-				'show_in_rest' => true,
-        'get_callback' => 'get_all_post_meta',
-    ));
+		foreach($term_types as $key => $obj){
+			 $term_types_data[$term_types[$key]->slug] =$term_types[$key];
+		}
+
+		return array( 'tpf-theme-features' => $term_features_data, 'tpf-theme-types' => $term_types_data);
+	}
+
+	register_rest_field( 'tpf-themes', 'post_meta', array(
+			'show_in_rest' => true,
+			'get_callback' => 'get_all_post_meta',
+	));
+
+	register_rest_field( 'tpf-themes', 'post_terms', array(
+			'show_in_rest' => true,
+			'get_callback' => 'get_all_custom_taxonomy',
+	));
 }
 
 add_action( 'carbon_fields_register_fields', 'crb_attach_theme_options' );
