@@ -10,6 +10,7 @@
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       tp-factory
  * Domain Path:       /languages
+ * GitHub Plugin URI: fujianto/theme-plugin-factory
  * GitHub plugin URI: https://github.com/fujianto/theme-plugin-factory
  * GitHub branch: master
  */
